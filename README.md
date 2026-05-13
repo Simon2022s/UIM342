@@ -1,8 +1,8 @@
 # UIM2513 Gateway and UIM342 Motor Control Python SDK
 
 A comprehensive Python SDK for serial communication with UIM2513 Gateway and UIM342/UIM720 motor controllers. This SDK provides a complete set of functions for motor control, configuration, and monitoring through asynchronous serial communication.
-![Example1`](example1.png)
-![Example2`](example2.png)
+![Example1](example1.png)
+![Example2](example2.png)
 ## Table of Contents
 
 - [Features](#features)
