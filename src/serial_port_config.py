@@ -135,9 +135,9 @@ def select_serial_port(use_saved: bool = False, auto_connect: bool = False) -> O
                 try:
                     with open(config_file, 'w') as f:
                         json.dump(save_config, f, indent=2)
-                    print(f"✓ Port selection saved to {config_file}")
+                    print(f"OK Port selection saved to {config_file}")
                 except IOError as e:
-                    print(f"⚠ Warning: Could not save port selection: {e}")
+                    print(f"WARNING Warning: Could not save port selection: {e}")
                 
                 return selected_port
             else:

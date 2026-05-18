@@ -133,7 +133,7 @@ class SDKClient:
                 )
                 return _process_received_data(response_frame, send_time)
             except asyncio.TimeoutError:
-                print(Colors.red(f"✗ Timeout ({timeout}s) - No response received"))
+                print(Colors.red(f"X Timeout ({timeout}s) - No response received"))
                 return None
         else:
             # Multiple responses
@@ -157,7 +157,7 @@ class SDKClient:
                     break
             
             if not responses:
-                print(Colors.red(f"✗ Timeout ({timeout}s) - No responses received"))
+                print(Colors.red(f"X Timeout ({timeout}s) - No responses received"))
                 return None
             
             return responses
@@ -256,7 +256,7 @@ def _print_sdk_response_basic(parsed: Optional[Dict[str, Any]], title: str, il_t
     cw_desc = cw_info.get('command_description', 'Unknown command')
     print(Colors.blue(f"  - Control Word: 0x{parsed['control_word']:02X} ({parsed['control_word']}) - {cw_name} ({cw_desc})"))
     print(Colors.blue(f"  - Data Length: {parsed['data_len']}"))
-    print(Colors.blue(f"  - CRC Valid: {'✓ Yes' if parsed['crc_valid'] else '✗ No'}"))
+    print(Colors.blue(f"  - CRC Valid: {'OK Yes' if parsed['crc_valid'] else 'X No'}"))
 
     # If IL info is available, print it
     if 'il_info' in parsed:
@@ -469,11 +469,11 @@ async def SdkSetInputLogic(
     
     # Special validation for stall trigger
     if input_index == SCF_STL_IDX and rising_edge_action != 0x00:
-        print(Colors.yellow(f"⚠ Warning: For stall trigger (SCF_STL_IDX), rising_edge_action should be 0x00, got 0x{rising_edge_action:02X}"))
+        print(Colors.yellow(f"WARNING Warning: For stall trigger (SCF_STL_IDX), rising_edge_action should be 0x00, got 0x{rising_edge_action:02X}"))
     
     # Special validation for torque limit trigger
     if input_index == SCF_TLC_IDX and not (10 <= rising_edge_action <= 300):
-        print(Colors.yellow(f"⚠ Warning: For torque limit trigger (SCF_TLC_IDX), rising_edge_action should be torque percentage (10-300%), got {rising_edge_action}"))
+        print(Colors.yellow(f"WARNING Warning: For torque limit trigger (SCF_TLC_IDX), rising_edge_action should be torque percentage (10-300%), got {rising_edge_action}"))
     
     # Build command frame
     # IL SET command: Control Word = __IL | CMD_REQUEST_FLAG, DL = 3, d0 = input_index, d1 = falling_edge_action, d2 = rising_edge_action
@@ -558,16 +558,39 @@ def _print_dio_port_info(dio_parsed: Dict[str, Any], structured_result: Dict[str
     print(f"{'=' * 60}\n")
 
 
-async def SdkGetDIOport(station_id: int) -> Optional[Dict[str, Any]]:
+async def SdkGetDIOport(station_id: int, dio_index: int = 0) -> Optional[Dict[str, Any]]:
     """
     Get Digital I/O port status
-    
+
+    Args:
+        station_id: Station ID (0-255)
+        dio_index: DIO index (0-255), passed to d0 position for specific DIO operations
+
     Returns:
         Dictionary containing parsed response frame with additional 'dio_structured' field
         containing structured DIO port information (IN1~IN3 and OP1 only)
     """
-    description = "Sending SdkGetDIOport command (Query Digital I/O port status):"
-    parsed = await _execute_sdk_command(station_id, __DI, [], description)
+    # DI command supports larger index values (e.g., DI257 is valid)
+    if not (0 <= dio_index <= 1023):  # Allow up to 1023 for DI command
+        raise ValueError(f"dio_index must be 0-1023, got {dio_index}")
+
+    # Handle different DI operations based on parameter value
+    if dio_index == 0:
+        # DI0 or DI: Get general DIO status
+        description = f"Sending SdkGetDIOport command (Get general DIO status):"
+        data_bytes = [0]
+    elif dio_index <= 255:
+        # DI1-DI255: Get specific DIO channel info
+        description = f"Sending SdkGetDIOport command (Get DIO channel {dio_index} info):"
+        data_bytes = [dio_index]
+    else:
+        # DI256+: Control DIO outputs (e.g., DI257 for indicator light)
+        description = f"Sending SdkGetDIOport command (Control DIO output {dio_index}):"
+        # For control operations, we might need additional data bytes
+        # Using the pattern: [index_low, index_high, control_value]
+        data_bytes = [dio_index & 0xFF, (dio_index >> 8) & 0xFF, 0x01]  # 0x01 = turn on
+
+    parsed = await _execute_sdk_command(station_id, __DI, data_bytes, description)
     
     # Parse DIO port response and add structured result
     if parsed and parsed.get('data_bytes') and len(parsed['data_bytes']) >= 2:

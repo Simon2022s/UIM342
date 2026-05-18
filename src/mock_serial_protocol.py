@@ -193,7 +193,7 @@ async def mock_execute_string_commands(command_string: str, station_id: int = 5)
     # Parse commands
     commands = parser.parse_commands(command_string)
     if not commands:
-        print(Colors.yellow("⚠ No valid commands found"))
+        print(Colors.yellow("WARNING No valid commands found"))
         return []
 
     print(Colors.green(f"\nExecuting {len(commands)} mock commands on Station {station_id}:"))
@@ -253,7 +253,7 @@ async def mock_execute_string_commands(command_string: str, station_id: int = 5)
                     print(Colors.red(f"   X {cmd_name} failed: {result.get('error', 'Unknown error')}"))
             else:
                 # Command not implemented in mock
-                print(Colors.yellow(f"   ⚠ {cmd_name} not implemented in mock (skipped)"))
+                print(Colors.yellow(f"   WARNING {cmd_name} not implemented in mock (skipped)"))
                 results.append({
                     'command': cmd_name,
                     'parameter': param,

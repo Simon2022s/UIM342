@@ -129,7 +129,7 @@ async def wait_with_message(seconds: float, message: str) -> None:
     print(message)
     print("-" * 60)
     await asyncio.sleep(seconds)
-    print(f"✓ {seconds} second{'s' if seconds != 1.0 else ''} elapsed")
+    print(f"OK {seconds} second{'s' if seconds != 1.0 else ''} elapsed")
 
 
 async def wait_for_ptp_motion_in_position(
@@ -221,9 +221,9 @@ async def wait_for_ptp_motion_in_position(
         elapsed_time = time.perf_counter() - start_time
         elapsed_ms = elapsed_time * 1000
         if len(wait_stations) == 1:
-            print(Colors.green(f"✓ PTP Motion In Position notification received from Station {wait_stations[0]} after {elapsed_ms:.2f} ms"))
+            print(Colors.green(f"OK PTP Motion In Position notification received from Station {wait_stations[0]} after {elapsed_ms:.2f} ms"))
         else:
-            print(Colors.green(f"✓ PTP Motion In Position notification received from all {len(wait_stations)} stations after {elapsed_ms:.2f} ms"))
+            print(Colors.green(f"OK PTP Motion In Position notification received from all {len(wait_stations)} stations after {elapsed_ms:.2f} ms"))
         return True
     except asyncio.TimeoutError:
         # Timeout occurred - check which stations completed and which are pending
@@ -232,13 +232,13 @@ async def wait_for_ptp_motion_in_position(
         pending = [sid for sid in wait_stations if not event_manager.get_ptp_motion_event(sid).is_set()]
         
         if len(wait_stations) == 1:
-            print(Colors.red(f"⚠ Timeout ({timeout}s) waiting for PTP Motion In Position notification from Station {wait_stations[0]}"))
+            print(Colors.red(f"WARNING Timeout ({timeout}s) waiting for PTP Motion In Position notification from Station {wait_stations[0]}"))
         else:
-            print(Colors.red(f"⚠ Timeout ({timeout}s) waiting for PTP Motion In Position notification"))
+            print(Colors.red(f"WARNING Timeout ({timeout}s) waiting for PTP Motion In Position notification"))
             if completed:
-                print(Colors.green(f"  ✓ Completed stations: {completed}"))
+                print(Colors.green(f"  OK Completed stations: {completed}"))
             if pending:
-                print(Colors.red(f"  ✗ Pending stations: {pending}"))
+                print(Colors.red(f"  X Pending stations: {pending}"))
         return False
 
 
@@ -285,13 +285,13 @@ async def wait_for_s1_trigger(
         # Event was set - S1 trigger signal detected
         elapsed_time = time.perf_counter() - start_time
         elapsed_ms = elapsed_time * 1000
-        print(Colors.green(f"✓ S1 trigger signal (P1 Low Level) detected from Station {station_id} after {elapsed_ms:.2f} ms"))
+        print(Colors.green(f"OK S1 trigger signal (P1 Low Level) detected from Station {station_id} after {elapsed_ms:.2f} ms"))
         return True
             
     except asyncio.TimeoutError:
         # Timeout occurred
         elapsed_time = time.perf_counter() - start_time
-        print(Colors.red(f"⚠ Timeout ({timeout}s) waiting for S1 trigger signal (P1 Low Level) from Station {station_id}"))
+        print(Colors.red(f"WARNING Timeout ({timeout}s) waiting for S1 trigger signal (P1 Low Level) from Station {station_id}"))
         return False
 
 
@@ -363,7 +363,7 @@ async def goto_home(
         # Get current IN1 Digital Level
         result_dio = await execute_and_check_sdk(SdkGetDIOport, "SdkGetDIOport", can_id)
         if not result_dio or not result_dio.get('dio_structured'):
-            print(Colors.red(f"✗ Failed to get DIO port status for Station {can_id}"))
+            print(Colors.red(f"X Failed to get DIO port status for Station {can_id}"))
             return False
         
         dio_structured = result_dio['dio_structured']
@@ -387,7 +387,7 @@ async def goto_home(
             # Wait for movement finish (i.e., "Motor In Position" Flag from Motor)
             motion_complete = await wait_for_ptp_motion_in_position(event_manager, can_id, timeout=DEFAULT_PTP_MOTION_TIMEOUT)
             if not motion_complete:
-                print(Colors.red(f"✗ Station {can_id}: WaitFlag Fail! (PTP motion did not complete)"))
+                print(Colors.red(f"X Station {can_id}: WaitFlag Fail! (PTP motion did not complete)"))
                 return False
         
         # Setup IN1 Input Logic
@@ -412,14 +412,14 @@ async def goto_home(
         )
         
         if not result_il:
-            print(Colors.red(f"✗ Failed to set input logic for Station {can_id}"))
+            print(Colors.red(f"X Failed to set input logic for Station {can_id}"))
             return False
         
         # Verify the input logic was set correctly
         if result_il.get('il_info'):
             il_info = result_il['il_info']
             if il_info.get('falling_edge_action') != ILC_EST_IDX or il_info.get('rising_edge_action') != ILC_NOP_IDX:
-                print(Colors.red(f"✗ Input logic verification failed for Station {can_id}"))
+                print(Colors.red(f"X Input logic verification failed for Station {can_id}"))
                 print(f"  Expected: falling_edge=ILC_EST_IDX, rising_edge=ILC_NOP_IDX")
                 print(f"  Got: falling_edge={il_info.get('falling_edge_action')}, rising_edge={il_info.get('rising_edge_action')}")
                 return False
@@ -455,9 +455,9 @@ async def goto_home(
                 await execute_and_check_sdk(SdkSetJogMxn, "SdkSetJogMxn(stop)", can_id, 0)
                 await execute_and_check_sdk(SdkSetBeginMxn, "SdkSetBeginMxn(stop)", can_id)
                 await asyncio.sleep(0.2)  # Wait a bit for motor to stop
-                print(Colors.green(f"✓ Motor stopped for Station {can_id}"))
+                print(Colors.green(f"OK Motor stopped for Station {can_id}"))
             except Exception as stop_error:
-                print(Colors.yellow(f"⚠ Failed to stop motor for Station {can_id}: {stop_error}"))
+                print(Colors.yellow(f"WARNING Failed to stop motor for Station {can_id}: {stop_error}"))
             # Continue anyway to disable input logic
         
         # Disable IN1 Input Logic
@@ -475,9 +475,9 @@ async def goto_home(
             ILC_NOP_IDX   # Rising edge action: No Action
         )
         
-        print(Colors.green(f"✓ GotoHome completed for Station {can_id}"))
+        print(Colors.green(f"OK GotoHome completed for Station {can_id}"))
         return (True, s1_timeout)
         
     except Exception as e:
-        print(Colors.red(f"✗ GotoHome error for Station {can_id}: {e}"))
+        print(Colors.red(f"X GotoHome error for Station {can_id}: {e}"))
         return (False, False)

@@ -126,7 +126,7 @@ class StringCommandParser:
         # Extract command name (letters) and parameters (numbers)
         match = re.match(r'^([A-Z]+)(-?\d*)$', command.upper())
         if not match:
-            print(Colors.red(f"✗ Invalid command format: {command}"))
+            print(Colors.red(f"X Invalid command format: {command}"))
             return None
 
         cmd_name = match.group(1)
@@ -138,12 +138,12 @@ class StringCommandParser:
             try:
                 param = int(param_str)
             except ValueError:
-                print(Colors.red(f"✗ Invalid parameter for {cmd_name}: {param_str}"))
+                print(Colors.red(f"X Invalid parameter for {cmd_name}: {param_str}"))
                 return None
 
         # Check if command is supported
         if cmd_name not in self.command_map:
-            print(Colors.red(f"✗ Unsupported command: {cmd_name}"))
+            print(Colors.red(f"X Unsupported command: {cmd_name}"))
             return None
 
         return {
@@ -168,7 +168,7 @@ class StringCommandParser:
         # Parse commands
         commands = self.parse_commands(command_string)
         if not commands:
-            print(Colors.yellow("⚠ No valid commands found"))
+            print(Colors.yellow("WARNING No valid commands found"))
             return []
 
         print(Colors.green(f"\nExecuting {len(commands)} commands on Station {station_id}:"))
@@ -197,10 +197,10 @@ class StringCommandParser:
                     'result': result
                 })
 
-                print(Colors.green(f"   ✓ {cmd_name} executed successfully"))
+                print(Colors.green(f"   OK {cmd_name} executed successfully"))
 
             except Exception as e:
-                error_msg = f"✗ {cmd_name} failed: {e}"
+                error_msg = f"X {cmd_name} failed: {e}"
                 print(Colors.red(f"   {error_msg}"))
 
                 results.append({
@@ -274,7 +274,8 @@ class StringCommandParser:
 
     async def _cmd_di(self, param: Optional[int]) -> Optional[Dict[str, Any]]:
         """Digital I/O"""
-        return await SdkGetDIOport(self.station_id)
+        index = param if param is not None else 0
+        return await SdkGetDIOport(self.station_id, index)
 
     async def _cmd_il(self, param: Optional[int]) -> Optional[Dict[str, Any]]:
         """Input Logic"""

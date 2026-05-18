@@ -679,7 +679,7 @@ def _print_data_length_mismatch(result: Dict[str, Any], expected_len: int) -> No
     elif data_bytes and data_len > 0:
         print(Colors.yellow(f"  Data Bytes: {[hex(b) for b in data_bytes[:data_len]]}"))
     
-    print(Colors.yellow(f"  CRC Valid: {'✓ Yes' if crc_valid else '✗ No'}"))
+    print(Colors.yellow(f"  CRC Valid: {'OK Yes' if crc_valid else 'X No'}"))
 
 
 def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
@@ -757,7 +757,7 @@ def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
                     config_name = f"Motor Config: {value}"
                 
                 print(Colors.green(f"  Station ID: {station_id}"))
-                print(Colors.green(f"  Status: ✓ Success"))
+                print(Colors.green(f"  Status: OK Success"))
                 print(Colors.blue(f"  Command Index (d0): {d0} (0x{d0:02X})"))
                 print(Colors.blue(f"  {config_name}"))
             else:
@@ -885,7 +885,7 @@ def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
                 try:
                     il_info = parse_il_response(data_bytes[:data_len])
                     print(Colors.green(f"  Station ID: {station_id}"))
-                    print(Colors.green(f"  Status: ✓ Success"))
+                    print(Colors.green(f"  Status: OK Success"))
                     print(Colors.blue(f"  Input Index: {il_info.get('input_index', 'N/A')} - {il_info.get('index_name', 'N/A')}"))
                     
                     if il_info.get('is_stall_trigger'):
@@ -946,7 +946,7 @@ def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
                     index_name = f"Unknown Index ({d0})"
                 
                 print(Colors.green(f"  Station ID: {station_id}"))
-                print(Colors.green(f"  Status: ✓ Success"))
+                print(Colors.green(f"  Status: OK Success"))
                 print(Colors.blue(f"  Index (d0): {d0} (0x{d0:02X}) - {index_name}"))
                 print(Colors.blue(f"  Speed Value (d1~d4): {speed_value} pps"))
             else:
@@ -976,7 +976,7 @@ def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
                     index_name = f"Unknown Index ({d0})"
                 
                 print(Colors.green(f"  Station ID: {station_id}"))
-                print(Colors.green(f"  Status: ✓ Success"))
+                print(Colors.green(f"  Status: OK Success"))
                 print(Colors.blue(f"  Index (d0): {d0} (0x{d0:02X}) - {index_name}"))
                 print(Colors.blue(f"  Absolute Position Value (d1~d4): {pa_value}"))
             else:
@@ -1006,7 +1006,7 @@ def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
                     index_name = f"Unknown Index ({d0})"
                 
                 print(Colors.green(f"  Station ID: {station_id}"))
-                print(Colors.green(f"  Status: ✓ Success"))
+                print(Colors.green(f"  Status: OK Success"))
                 print(Colors.blue(f"  Index (d0): {d0} (0x{d0:02X}) - {index_name}"))
                 print(Colors.blue(f"  Relative Position Value (d1~d4): {pr_value}"))
             else:
@@ -1036,7 +1036,7 @@ def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
                     index_name = f"Unknown Index ({d0})"
                 
                 print(Colors.green(f"  Station ID: {station_id}"))
-                print(Colors.green(f"  Status: ✓ Success"))
+                print(Colors.green(f"  Status: OK Success"))
                 print(Colors.blue(f"  Index (d0): {d0} (0x{d0:02X}) - {index_name}"))
                 print(Colors.blue(f"  Speed Value (d1~d4): {speed_value} pps"))
             else:
@@ -1045,7 +1045,7 @@ def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
         elif base_name.startswith("SdkSet"):
             # Set commands - just confirm success
             print(Colors.green(f"  Station ID: {station_id}"))
-            print(Colors.green(f"  Status: ✓ Success"))
+            print(Colors.green(f"  Status: OK Success"))
             if data_len > 0:
                 print(Colors.blue(f"  Response Data: {[hex(b) for b in data_bytes[:data_len]]}"))
                 
@@ -1056,7 +1056,7 @@ def _print_single_result(result: Dict[str, Any], function_name: str) -> None:
             print(Colors.blue(f"  Data Length: {data_len}"))
             if data_len > 0:
                 print(Colors.blue(f"  Data Bytes: {[hex(b) for b in data_bytes[:data_len]]}"))
-            print(Colors.blue(f"  CRC Valid: {'✓ Yes' if result.get('crc_valid', False) else '✗ No'}"))
+            print(Colors.blue(f"  CRC Valid: {'OK Yes' if result.get('crc_valid', False) else 'X No'}"))
             
     except Exception as e:
         # Fallback to basic printing if parsing fails
@@ -1082,11 +1082,11 @@ def check_sdk_response(result: Any, function_name: str) -> None:
         NoStationsError: If result is an empty list (no stations responded)
     """
     if result is None:
-        print(Colors.red(f"\n✗ {function_name} failed - No response received"))
+        print(Colors.red(f"\nX {function_name} failed - No response received"))
         print(Colors.red("No response from device."))
         raise NoResponseError(function_name)
     elif isinstance(result, list) and len(result) == 0:
-        print(Colors.red(f"\n✗ {function_name} failed - No stations responded"))
+        print(Colors.red(f"\nX {function_name} failed - No stations responded"))
         print(Colors.red("No stations available."))
         raise NoStationsError(function_name)
 
@@ -1120,10 +1120,10 @@ def get_device_station_ids(result_ml: Any) -> List[int]:
     # Step 3: Check if only gateway responded (no device stations)
     if len(device_stations) == 0:
         if len(gateway_responses) > 0:
-            print(Colors.yellow(f"\n⚠ Gateway (Station ID {GATEWAY_STATION_ID}) is online, but no other device stations are online."))
+            print(Colors.yellow(f"\nWARNING Gateway (Station ID {GATEWAY_STATION_ID}) is online, but no other device stations are online."))
             print(Colors.red("No device stations available."))
         else:
-            print(Colors.red("\n✗ SdkGetML failed - No device stations responded"))
+            print(Colors.red("\nX SdkGetML failed - No device stations responded"))
             print(Colors.red("No device stations available."))
         raise NoDeviceStationsError(has_gateway=(len(gateway_responses) > 0))
     
@@ -1180,10 +1180,10 @@ def check_sdk_getml_response(result_ml: Any, target_station_id: int) -> None:
     # Gateway alone is not sufficient - we need at least one device station (motor)
     if len(device_stations) == 0:
         if len(gateway_responses) > 0:
-            print(Colors.yellow(f"\n⚠ Gateway (Station ID {GATEWAY_STATION_ID}) is online, but no other device stations are online."))
+            print(Colors.yellow(f"\nWARNING Gateway (Station ID {GATEWAY_STATION_ID}) is online, but no other device stations are online."))
             print(Colors.red("No device stations available."))
         else:
-            print(Colors.red("\n✗ SdkGetML failed - No device stations responded"))
+            print(Colors.red("\nX SdkGetML failed - No device stations responded"))
             print(Colors.red("No device stations available."))
         raise NoDeviceStationsError(has_gateway=(len(gateway_responses) > 0))
     
@@ -1193,7 +1193,7 @@ def check_sdk_getml_response(result_ml: Any, target_station_id: int) -> None:
     # Step 5: Check if target_station_id exists in found device stations
     # The target station must be one of the available device stations
     if target_station_id not in found_station_ids:
-        print(Colors.red(f"\n✗ Target Station ID {target_station_id} (0x{target_station_id:02X}) is not found in available device stations."))
+        print(Colors.red(f"\nX Target Station ID {target_station_id} (0x{target_station_id:02X}) is not found in available device stations."))
         print(Colors.yellow(f"Available device station IDs: {found_station_ids}"))
         if len(gateway_responses) > 0:
             print(Colors.blue(f"Gateway (Station ID {GATEWAY_STATION_ID}) is online"))
@@ -1205,7 +1205,7 @@ def check_sdk_getml_response(result_ml: Any, target_station_id: int) -> None:
         )
     
     # Success: Found device stations (excluding gateway) and target station exists
-    print(Colors.green(f"\n✓ Gateway online, found {len(device_stations)} device station(s) (excluding gateway)"))
+    print(Colors.green(f"\nOK Gateway online, found {len(device_stations)} device station(s) (excluding gateway)"))
     if len(gateway_responses) > 0:
         print(Colors.blue(f"  - Gateway (Station ID {GATEWAY_STATION_ID}) is online"))
     for resp in device_stations:
@@ -1295,7 +1295,7 @@ def sdk_error_handler(
                     raise
                 return None
             except Exception as e:
-                print(Colors.red(f"\n✗ {name} failed with unexpected error: {type(e).__name__}: {e}"))
+                print(Colors.red(f"\nX {name} failed with unexpected error: {type(e).__name__}: {e}"))
                 if reraise:
                     raise
                 return None

@@ -210,7 +210,7 @@ async def serial_communication_async(
             )
         else:
             # Fallback: Enter demo mode with mock hardware
-            print(Colors.yellow("\n⚠ serial_asyncio not available in this Python environment"))
+            print(Colors.yellow("\nWARNING serial_asyncio not available in this Python environment"))
             print(Colors.yellow("Entering DEMO MODE with mock hardware for string command testing..."))
 
             # Ask user if they want to continue with demo mode
@@ -244,8 +244,8 @@ async def serial_communication_async(
             set_sdk_client(sdk_client)
 
             # In demo mode, skip to interactive string command mode
-            print(Colors.green(f"✓ Mock serial port {port} opened"))
-            print(Colors.green("✓ Demo mode ready for string command testing"))
+            print(Colors.green(f"OK Mock serial port {port} opened"))
+            print(Colors.green("OK Demo mode ready for string command testing"))
 
             # Auto-detect mock device
             global STATION_ID_X, STATION_ID_Y
@@ -256,14 +256,14 @@ async def serial_communication_async(
             print("\n" + "=" * 60)
             print(Colors.yellow("Demo Mode - String Command Testing"))
             print("=" * 60)
-            print(Colors.green(f"✓ Auto-assigned: STATION_ID_X = {STATION_ID_X}"))
+            print(Colors.green(f"OK Auto-assigned: STATION_ID_X = {STATION_ID_X}"))
             print(Colors.blue(f"Ready to test string commands like: BG;ML;PA60000;JV1000;"))
 
             # Skip to interactive mode directly
             goto_interactive_mode = True
             return  # Exit the serial communication function early in demo mode
         
-        print(f"✓ Serial port {port} opened")
+        print(f"OK Serial port {port} opened")
         
         # Initialize print message flags after successful serial connection
         init_print_messages()
@@ -331,7 +331,7 @@ async def serial_communication_async(
                             data_info = f"Data Length: {parsed['data_len']}"
                             if parsed['data_len'] > 0:
                                 data_info += f" | Data Bytes: {bytes_to_hex_string(bytes(parsed['data_bytes']))} ({parsed['data_bytes']})"
-                            data_info += f" | CRC Valid: {'✓ Yes' if parsed['crc_valid'] else '✗ No'}"
+                            data_info += f" | CRC Valid: {'OK Yes' if parsed['crc_valid'] else 'X No'}"
                             print(Colors.purple(data_info))
 
                         # Check if this is a Real-Time Notification and parse d0 code
@@ -373,13 +373,13 @@ async def serial_communication_async(
                             print(Colors.purple("=" * 60))
                     except ValueError as e:
                         if constants.PRINT_MESSAGES:
-                            print(Colors.red(f"⚠ Failed to parse real-time notification message: {e}"))
+                            print(Colors.red(f"WARNING Failed to parse real-time notification message: {e}"))
                 except asyncio.TimeoutError:
                     # Timeout is expected and normal - allows loop to continue and check for cancellation
                     continue
                 except Exception as e:
                     # Unexpected error - log and wait before retrying to avoid tight error loops
-                    print(Colors.red(f"⚠ Error handling real-time notification message: {e}"))
+                    print(Colors.red(f"WARNING Error handling real-time notification message: {e}"))
                     await asyncio.sleep(ACTIVE_MESSAGE_QUEUE_TIMEOUT)
         
         # Start background task for real-time notification messages
@@ -408,13 +408,13 @@ async def serial_communication_async(
             STATION_ID_X = device_station_ids[0]
             STATION_ID_Y = 0  # No Y motor
             station_id = STATION_ID_X
-            print(Colors.green(f"✓ Auto-assigned: STATION_ID_X = {STATION_ID_X}"))
+            print(Colors.green(f"OK Auto-assigned: STATION_ID_X = {STATION_ID_X}"))
         elif num_motors >= 2:
             # Two or more motors: assign smaller ID to X, larger ID to Y
             STATION_ID_X = device_station_ids[0]  # Smaller station ID
             STATION_ID_Y = device_station_ids[1]  # Larger station ID
             station_id = STATION_ID_X
-            print(Colors.green(f"✓ Auto-assigned: STATION_ID_X = {STATION_ID_X}, STATION_ID_Y = {STATION_ID_Y}"))
+            print(Colors.green(f"OK Auto-assigned: STATION_ID_X = {STATION_ID_X}, STATION_ID_Y = {STATION_ID_Y}"))
         else:
             # This should not happen as get_device_station_ids raises exception if no stations
             raise NoDeviceStationsError(has_gateway=False)
@@ -496,7 +496,7 @@ async def serial_communication_async(
         print(f"ID:{station_id} SdkSetMotorConfig[5] = 0 (Brake off)")
         print("=" * 60)
         await execute_and_check_sdk(SdkSetMotorConfig, "SdkSetMotorConfig(Brake off)", station_id, MTS_BRK_IDX, 0)
-        print(Colors.green("✓ SdkSetMotorConfig (Brake off) ... [  OK  ]"))
+        print(Colors.green("OK SdkSetMotorConfig (Brake off) ... [  OK  ]"))
         
         # Start jog motion
         await execute_and_check_sdk(SdkSetJogMxn, "SdkSetJogMxn", station_id, DEFAULT_JOG_SPEED)
@@ -632,7 +632,7 @@ async def serial_communication_async(
                 print("\n\nInteractive mode interrupted.")
                 break
             except Exception as e:
-                print(Colors.red(f"\n✗ Error in interactive mode: {e}"))
+                print(Colors.red(f"\nX Error in interactive mode: {e}"))
 
         # GotoHome - Move to home position
         goto_home_success, x_axis_s1_timeout = await goto_home(event_manager, execute_and_check_sdk, station_id)
@@ -683,16 +683,16 @@ async def serial_communication_async(
                     await execute_and_check_sdk(SdkSetJogMxn, f"SdkSetJogMxn(stop, STATION_ID_X={STATION_ID_X})", STATION_ID_X, 0)
                     await execute_and_check_sdk(SdkSetBeginMxn, f"SdkSetBeginMxn(stop, STATION_ID_X={STATION_ID_X})", STATION_ID_X)
                     await asyncio.sleep(0.2)  # Wait a bit for motor to stop
-                    print(Colors.green(f"✓ X axis motor (Station {STATION_ID_X}) stopped"))
+                    print(Colors.green(f"OK X axis motor (Station {STATION_ID_X}) stopped"))
                 except Exception as stop_error:
-                    print(Colors.yellow(f"⚠ Failed to stop X axis motor (Station {STATION_ID_X}): {stop_error}"))
+                    print(Colors.yellow(f"WARNING Failed to stop X axis motor (Station {STATION_ID_X}): {stop_error}"))
             
             # Wait 1 second before starting dual motor control
             print("\n" + "-" * 60)
             print("Waiting 1 second before starting dual motor control...")
             print("-" * 60)
             await asyncio.sleep(1.0)
-            print(Colors.green("✓ 1 second elapsed"))
+            print(Colors.green("OK 1 second elapsed"))
             
             # Step 1: Enable both motors (STATION_ID_X and STATION_ID_Y)
             # Motor must be enabled before any motion commands can be executed
@@ -700,10 +700,10 @@ async def serial_communication_async(
             print(f"Enabling motors: STATION_ID_X={STATION_ID_X}, STATION_ID_Y={STATION_ID_Y}")
             print("-" * 60)
             await execute_and_check_sdk(SdkSetMotorOn, f"SdkSetMotorOn(STATION_ID_X={STATION_ID_X}, enable)", STATION_ID_X, 1)
-            print(Colors.green(f"✓ STATION_ID_X={STATION_ID_X} motor enabled"))
+            print(Colors.green(f"OK STATION_ID_X={STATION_ID_X} motor enabled"))
             
             await execute_and_check_sdk(SdkSetMotorOn, f"SdkSetMotorOn(STATION_ID_Y={STATION_ID_Y}, enable)", STATION_ID_Y, 1)
-            print(Colors.green(f"✓ STATION_ID_Y={STATION_ID_Y} motor enabled"))
+            print(Colors.green(f"OK STATION_ID_Y={STATION_ID_Y} motor enabled"))
             
             # Step 2: Release brake for both motors (Brake off) - MTS_BRK_IDX = 5, value = 0
             # Brake must be released before motor can move. Brake prevents movement when motor is off.
@@ -711,10 +711,10 @@ async def serial_communication_async(
             print(f"Releasing brakes: STATION_ID_X={STATION_ID_X}, STATION_ID_Y={STATION_ID_Y}")
             print("-" * 60)
             await execute_and_check_sdk(SdkSetMotorConfig, f"SdkSetMotorConfig(STATION_ID_X={STATION_ID_X}, Brake off)", STATION_ID_X, MTS_BRK_IDX, 0)
-            print(Colors.green(f"✓ STATION_ID_X={STATION_ID_X} brake released"))
+            print(Colors.green(f"OK STATION_ID_X={STATION_ID_X} brake released"))
             
             await execute_and_check_sdk(SdkSetMotorConfig, f"SdkSetMotorConfig(STATION_ID_Y={STATION_ID_Y}, Brake off)", STATION_ID_Y, MTS_BRK_IDX, 0)
-            print(Colors.green(f"✓ STATION_ID_Y={STATION_ID_Y} brake released"))
+            print(Colors.green(f"OK STATION_ID_Y={STATION_ID_Y} brake released"))
             
             # Step 3: Call SdkSetOrigin for both motors (clear position to zero)
             # Setting origin establishes the current position as zero reference point.
@@ -723,10 +723,10 @@ async def serial_communication_async(
             print(f"Setting origin (clear to zero): STATION_ID_X={STATION_ID_X}, STATION_ID_Y={STATION_ID_Y}")
             print("-" * 60)
             await execute_and_check_sdk(SdkSetOrigin, f"SdkSetOrigin(STATION_ID_X={STATION_ID_X})", STATION_ID_X)
-            print(Colors.green(f"✓ STATION_ID_X={STATION_ID_X} origin set"))
+            print(Colors.green(f"OK STATION_ID_X={STATION_ID_X} origin set"))
             
             await execute_and_check_sdk(SdkSetOrigin, f"SdkSetOrigin(STATION_ID_Y={STATION_ID_Y})", STATION_ID_Y)
-            print(Colors.green(f"✓ STATION_ID_Y={STATION_ID_Y} origin set"))
+            print(Colors.green(f"OK STATION_ID_Y={STATION_ID_Y} origin set"))
             
             # Delay after origin set to allow position to stabilize
             await wait_with_message(WAIT_AFTER_ORIGIN_SET, f"Waiting {WAIT_AFTER_ORIGIN_SET} second after origin set...")
@@ -738,10 +738,10 @@ async def serial_communication_async(
             print(f"Setting PTP position to {DEFAULT_PTP_POSITION}: STATION_ID_X={STATION_ID_X}, STATION_ID_Y={STATION_ID_Y}")
             print("-" * 60)
             await execute_and_check_sdk(SdkSetPtpMxnA, f"SdkSetPtpMxnA(STATION_ID_X={STATION_ID_X}, {DEFAULT_PTP_POSITION})", STATION_ID_X, DEFAULT_PTP_POSITION)
-            print(Colors.green(f"✓ STATION_ID_X={STATION_ID_X} position set to {DEFAULT_PTP_POSITION}"))
+            print(Colors.green(f"OK STATION_ID_X={STATION_ID_X} position set to {DEFAULT_PTP_POSITION}"))
             
             await execute_and_check_sdk(SdkSetPtpMxnA, f"SdkSetPtpMxnA(STATION_ID_Y={STATION_ID_Y}, {DEFAULT_PTP_POSITION})", STATION_ID_Y, DEFAULT_PTP_POSITION)
-            print(Colors.green(f"✓ STATION_ID_Y={STATION_ID_Y} position set to {DEFAULT_PTP_POSITION}"))
+            print(Colors.green(f"OK STATION_ID_Y={STATION_ID_Y} position set to {DEFAULT_PTP_POSITION}"))
             
             # Step 5: Set different speeds: STATION_ID_X=DEFAULT_PTP_SPEED_X, STATION_ID_Y=DEFAULT_PTP_SPEED_Y
             # Using different speeds demonstrates that wait_for_ptp_motion_in_position() waits
@@ -751,10 +751,10 @@ async def serial_communication_async(
             print(f"Setting different speeds: STATION_ID_X={STATION_ID_X}->{DEFAULT_PTP_SPEED_X}, STATION_ID_Y={STATION_ID_Y}->{DEFAULT_PTP_SPEED_Y}")
             print("-" * 60)
             await execute_and_check_sdk(SdkSetPtpSPD, f"SdkSetPtpSPD(STATION_ID_X={STATION_ID_X}, {DEFAULT_PTP_SPEED_X})", STATION_ID_X, DEFAULT_PTP_SPEED_X)
-            print(Colors.green(f"✓ STATION_ID_X={STATION_ID_X} speed set to {DEFAULT_PTP_SPEED_X}"))
+            print(Colors.green(f"OK STATION_ID_X={STATION_ID_X} speed set to {DEFAULT_PTP_SPEED_X}"))
             
             await execute_and_check_sdk(SdkSetPtpSPD, f"SdkSetPtpSPD(STATION_ID_Y={STATION_ID_Y}, {DEFAULT_PTP_SPEED_Y})", STATION_ID_Y, DEFAULT_PTP_SPEED_Y)
-            print(Colors.green(f"✓ STATION_ID_Y={STATION_ID_Y} speed set to {DEFAULT_PTP_SPEED_Y}"))
+            print(Colors.green(f"OK STATION_ID_Y={STATION_ID_Y} speed set to {DEFAULT_PTP_SPEED_Y}"))
             
             # Step 6: Start motion for both motors
             # SdkSetBeginMxn initiates the motion that was configured with position and speed.
@@ -763,10 +763,10 @@ async def serial_communication_async(
             print(f"Starting motion: STATION_ID_X={STATION_ID_X}, STATION_ID_Y={STATION_ID_Y}")
             print("-" * 60)
             await execute_and_check_sdk(SdkSetBeginMxn, f"SdkSetBeginMxn(STATION_ID_X={STATION_ID_X})", STATION_ID_X)
-            print(Colors.green(f"✓ STATION_ID_X={STATION_ID_X} motion started"))
+            print(Colors.green(f"OK STATION_ID_X={STATION_ID_X} motion started"))
             
             await execute_and_check_sdk(SdkSetBeginMxn, f"SdkSetBeginMxn(STATION_ID_Y={STATION_ID_Y})", STATION_ID_Y)
-            print(Colors.green(f"✓ STATION_ID_Y={STATION_ID_Y} motion started"))
+            print(Colors.green(f"OK STATION_ID_Y={STATION_ID_Y} motion started"))
             
             # Step 7: Wait for BOTH motors to complete (PTP Motion In Position)
             # This is a synchronized wait - the function waits for ALL specified stations
@@ -787,10 +787,10 @@ async def serial_communication_async(
             print(f"Locking brakes: STATION_ID_X={STATION_ID_X}, STATION_ID_Y={STATION_ID_Y}")
             print("-" * 60)
             await execute_and_check_sdk(SdkSetMotorConfig, f"SdkSetMotorConfig(STATION_ID_X={STATION_ID_X}, Brake on)", STATION_ID_X, MTS_BRK_IDX, 1)
-            print(Colors.green(f"✓ STATION_ID_X={STATION_ID_X} brake locked"))
+            print(Colors.green(f"OK STATION_ID_X={STATION_ID_X} brake locked"))
             
             await execute_and_check_sdk(SdkSetMotorConfig, f"SdkSetMotorConfig(STATION_ID_Y={STATION_ID_Y}, Brake on)", STATION_ID_Y, MTS_BRK_IDX, 1)
-            print(Colors.green(f"✓ STATION_ID_Y={STATION_ID_Y} brake locked"))
+            print(Colors.green(f"OK STATION_ID_Y={STATION_ID_Y} brake locked"))
             
             # Step 9: Disable both motors
             # Disabling the motor turns off power. Brake should be locked first to hold position.
@@ -798,10 +798,10 @@ async def serial_communication_async(
             print(f"Disabling motors: STATION_ID_X={STATION_ID_X}, STATION_ID_Y={STATION_ID_Y}")
             print("-" * 60)
             await execute_and_check_sdk(SdkSetMotorOn, f"SdkSetMotorOn(STATION_ID_X={STATION_ID_X}, disable)", STATION_ID_X, 0)
-            print(Colors.green(f"✓ STATION_ID_X={STATION_ID_X} motor disabled"))
+            print(Colors.green(f"OK STATION_ID_X={STATION_ID_X} motor disabled"))
             
             await execute_and_check_sdk(SdkSetMotorOn, f"SdkSetMotorOn(STATION_ID_Y={STATION_ID_Y}, disable)", STATION_ID_Y, 0)
-            print(Colors.green(f"✓ STATION_ID_Y={STATION_ID_Y} motor disabled"))
+            print(Colors.green(f"OK STATION_ID_Y={STATION_ID_Y} motor disabled"))
         else:
             # Single motor mode: skip dual motor control
             print("\n" + "=" * 60)
@@ -815,7 +815,7 @@ async def serial_communication_async(
         print("=" * 60)
         
     except serial.SerialException as e:
-        print(Colors.red(f"\n✗ Serial port error: {e}"))
+        print(Colors.red(f"\nX Serial port error: {e}"))
         print("Please check:")
         print(f"  1. Whether {port} port exists")
         print("  2. Whether the port is occupied by another program")
@@ -825,12 +825,12 @@ async def serial_communication_async(
         raise
     except (NoResponseError, NoStationsError, NoDeviceStationsError, TargetStationNotFoundError) as e:
         # SDK communication errors - these are expected errors that should stop execution
-        print(Colors.red(f"\n✗ {type(e).__name__}: {e}"))
+        print(Colors.red(f"\nX {type(e).__name__}: {e}"))
         print(Colors.red("Program terminated due to communication error."))
     except ValueError as e:
-        print(Colors.red(f"\n✗ Data format error: {e}"))
+        print(Colors.red(f"\nX Data format error: {e}"))
     except Exception as e:
-        print(Colors.red(f"\n✗ Error occurred: {type(e).__name__}: {e}"))
+        print(Colors.red(f"\nX Error occurred: {type(e).__name__}: {e}"))
     finally:
         # Emergency motor safety cleanup: stop motors, disable, and lock brakes
         # This ensures motors are in a safe state even if program exits abnormally
@@ -871,15 +871,15 @@ async def serial_communication_async(
                         await SdkSetMotorOn(station_id, 0)
                         await asyncio.sleep(0.1)
                         
-                        print(Colors.green(f"✓ Station {station_id} safety cleanup completed"))
+                        print(Colors.green(f"OK Station {station_id} safety cleanup completed"))
                     except Exception as cleanup_error:
                         # Continue cleanup for other stations even if one fails
-                        print(Colors.red(f"⚠ Failed to cleanup Station {station_id}: {cleanup_error}"))
+                        print(Colors.red(f"WARNING Failed to cleanup Station {station_id}: {cleanup_error}"))
                 
-                print(Colors.green("✓ Emergency motor safety cleanup completed"))
+                print(Colors.green("OK Emergency motor safety cleanup completed"))
         except Exception as e:
             # If cleanup itself fails, just log and continue
-            print(Colors.yellow(f"⚠ Emergency cleanup failed: {e}"))
+            print(Colors.yellow(f"WARNING Emergency cleanup failed: {e}"))
         
         # Cleanup resources
         if active_message_task and not active_message_task.done():
@@ -892,7 +892,7 @@ async def serial_communication_async(
         if transport:
             transport.close()
             await asyncio.sleep(0.1)  # Wait for close to complete
-            print(f"\n✓ Serial port {port} closed")
+            print(f"\nOK Serial port {port} closed")
 
 
 def main() -> None:
@@ -919,7 +919,7 @@ def main() -> None:
             asyncio.run(serial_communication_async(selected_port))
         except (serial.SerialException, OSError, ValueError) as e:
             # Connection failed, prompt user to reselect port
-            print(Colors.red(f"\n✗ Connection failed: {e}"))
+            print(Colors.red(f"\nX Connection failed: {e}"))
             if auto_connect_attempted:
                 print(Colors.yellow("\nAuto-connect failed."))
             
@@ -952,7 +952,7 @@ def main() -> None:
                     asyncio.run(serial_communication_async(selected_port))
                     break  # Success, exit retry loop
                 except (serial.SerialException, OSError, ValueError) as retry_error:
-                    print(Colors.red(f"\n✗ Connection failed again: {retry_error}"))
+                    print(Colors.red(f"\nX Connection failed again: {retry_error}"))
                     
                     # Ask user if they want to try again
                     print("-" * 60)
@@ -972,7 +972,7 @@ def main() -> None:
                     # Continue loop to retry
                 except (NoResponseError, NoStationsError, NoDeviceStationsError, TargetStationNotFoundError) as sdk_error:
                     # SDK communication errors - these are fatal, exit program
-                    print(Colors.red(f"\n✗ {type(sdk_error).__name__}: {sdk_error}"))
+                    print(Colors.red(f"\nX {type(sdk_error).__name__}: {sdk_error}"))
                     print(Colors.red("Program terminated due to communication error."))
                     sys.exit(1)
         

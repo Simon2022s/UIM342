@@ -58,7 +58,7 @@ class SerialProtocol(asyncio.Protocol):
     def connection_made(self, transport: asyncio.Transport) -> None:
         """Called when connection is established"""
         self.transport = transport
-        print(f"✓ Serial connection established")
+        print(f"OK Serial connection established")
     
     def data_received(self, data: bytes) -> None:
         """
@@ -107,12 +107,12 @@ class SerialProtocol(asyncio.Protocol):
             except Exception as e:
                 # If parsing fails, treat as response (safer default)
                 # This ensures we don't lose frames even if parsing has issues
-                print(f"⚠ Warning: Failed to parse frame for routing: {e}")
+                print(f"WARNING Warning: Failed to parse frame for routing: {e}")
                 self.response_queue.put_nowait(frame)
     
     def connection_lost(self, exc: Optional[Exception]) -> None:
         """Called when connection is lost"""
-        print(f"✗ Serial connection lost: {exc}")
+        print(f"FAIL Serial connection lost: {exc}")
         self.connection_lost_event.set()
 
 
@@ -279,9 +279,9 @@ def _print_parsed_response(parsed: Optional[Dict[str, Any]], is_timeout: bool = 
 
     if parsed is None:
         if is_timeout:
-            print(Colors.red("✗ Timeout - No response received"))
+            print(Colors.red("FAIL Timeout - No response received"))
         else:
-            print(Colors.red("✗ No response received"))
+            print(Colors.red("FAIL No response received"))
         return
 
     # Print basic frame information
@@ -297,7 +297,7 @@ def _print_parsed_response(parsed: Optional[Dict[str, Any]], is_timeout: bool = 
     data_info = f"Data Length: {parsed['data_len']}"
     if parsed['data_len'] > 0:
         data_info += f" | Data Bytes: {bytes_to_hex_string(bytes(parsed['data_bytes']))} ({parsed['data_bytes']})"
-    data_info += f" | CRC Valid: {'✓ Yes' if parsed['crc_valid'] else '✗ No'}"
+    data_info += f" | CRC Valid: {'OK Yes' if parsed['crc_valid'] else 'FAIL No'}"
     print(Colors.blue(data_info))
     print("-" * 60)
 
@@ -311,7 +311,7 @@ def _process_received_data(received_data: bytes, send_time: float, is_timeout: b
     response_time_ms = (receive_time - send_time) * 1000
 
     if constants.PRINT_MESSAGES:
-        print(Colors.blue(f"✓ Response received after {response_time_ms:.2f} ms"))
+        print(Colors.blue(f"OK Response received after {response_time_ms:.2f} ms"))
         print(Colors.blue(f"Hexadecimal: {bytes_to_hex_string(received_data)}"))
 
     try:
@@ -320,5 +320,5 @@ def _process_received_data(received_data: bytes, send_time: float, is_timeout: b
         return parsed
     except ValueError as e:
         if constants.PRINT_MESSAGES:
-            print(Colors.red(f"✗ Failed to parse response: {e}"))
+            print(Colors.red(f"FAIL Failed to parse response: {e}"))
         return None
